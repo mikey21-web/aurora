@@ -1,7 +1,7 @@
 {
-  "name": "gitroom",
+  "name": "aurra",
   "version": "1.0.0",
-  "description": "",
+  "description": "Aurra - AI-powered social media content generation and scheduling",
   "main": "index.js",
   "license": "AGPL-3.0",
   "keywords": [],
