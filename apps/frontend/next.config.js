@@ -1,8 +1,16 @@
 // @ts-check
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { withSentryConfig } from '@sentry/nextjs';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const workspaceRoot = resolve(__dirname, '../..');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    root: workspaceRoot,
+  },
   experimental: {
     proxyTimeout: 90_000,
   },
