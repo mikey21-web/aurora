@@ -22,6 +22,20 @@ export class ContentBrainController {
     return this._contentBrainService.saveBrain(org.id, body);
   }
 
+  @Post('/hashtags')
+  generateHashtags(
+    @Body() body: { content: string; platform?: string }
+  ) {
+    return this._contentBrainService.generateHashtags(body.content, body.platform);
+  }
+
+  @Post('/score')
+  scoreContent(
+    @Body() body: { content: string; platform?: string }
+  ) {
+    return this._contentBrainService.scoreContent(body.content, body.platform);
+  }
+
   @Post('/feedback')
   recordFeedback(
     @GetOrgFromRequest() org: Organization,

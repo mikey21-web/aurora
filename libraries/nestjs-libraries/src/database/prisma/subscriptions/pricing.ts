@@ -2,6 +2,10 @@ export interface PricingInnerInterface {
   current: string;
   month_price: number;
   year_price: number;
+  month_price_inr?: number;
+  year_price_inr?: number;
+  month_price_eur?: number;
+  year_price_eur?: number;
   channel?: number;
   posts_per_month: number;
   team_members: boolean;
@@ -16,14 +20,40 @@ export interface PricingInnerInterface {
   webhooks: number;
   autoPost: boolean;
 }
+
 export interface PricingInterface {
   [key: string]: PricingInnerInterface;
 }
+
+export type SupportedCurrency = 'USD' | 'INR' | 'EUR';
+
+export function getPriceForCurrency(
+  plan: PricingInnerInterface,
+  currency: SupportedCurrency,
+  billing: 'monthly' | 'yearly'
+): number {
+  if (currency === 'INR') {
+    return billing === 'monthly'
+      ? (plan.month_price_inr ?? Math.round(plan.month_price * 83))
+      : (plan.year_price_inr ?? Math.round(plan.year_price * 83));
+  }
+  if (currency === 'EUR') {
+    return billing === 'monthly'
+      ? (plan.month_price_eur ?? Math.round(plan.month_price * 0.92))
+      : (plan.year_price_eur ?? Math.round(plan.year_price * 0.92));
+  }
+  return billing === 'monthly' ? plan.month_price : plan.year_price;
+}
+
 export const pricing: PricingInterface = {
   FREE: {
     current: 'FREE',
     month_price: 0,
     year_price: 0,
+    month_price_inr: 0,
+    year_price_inr: 0,
+    month_price_eur: 0,
+    year_price_eur: 0,
     channel: 0,
     image_generation_count: 0,
     posts_per_month: 0,
@@ -40,8 +70,12 @@ export const pricing: PricingInterface = {
   },
   STANDARD: {
     current: 'STANDARD',
-    month_price: 29,
-    year_price: 278,
+    month_price: 6,
+    year_price: 58,
+    month_price_inr: 499,
+    year_price_inr: 4788,
+    month_price_eur: 6,
+    year_price_eur: 55,
     channel: 5,
     posts_per_month: 400,
     image_generation_count: 20,
@@ -58,8 +92,12 @@ export const pricing: PricingInterface = {
   },
   TEAM: {
     current: 'TEAM',
-    month_price: 39,
-    year_price: 374,
+    month_price: 15,
+    year_price: 144,
+    month_price_inr: 1249,
+    year_price_inr: 11988,
+    month_price_eur: 14,
+    year_price_eur: 132,
     channel: 10,
     posts_per_month: 1000000,
     image_generation_count: 100,
@@ -76,8 +114,12 @@ export const pricing: PricingInterface = {
   },
   PRO: {
     current: 'PRO',
-    month_price: 49,
-    year_price: 470,
+    month_price: 25,
+    year_price: 240,
+    month_price_inr: 1999,
+    year_price_inr: 19188,
+    month_price_eur: 23,
+    year_price_eur: 220,
     channel: 30,
     posts_per_month: 1000000,
     image_generation_count: 300,
@@ -94,8 +136,12 @@ export const pricing: PricingInterface = {
   },
   ULTIMATE: {
     current: 'ULTIMATE',
-    month_price: 99,
-    year_price: 950,
+    month_price: 49,
+    year_price: 470,
+    month_price_inr: 3999,
+    year_price_inr: 38388,
+    month_price_eur: 45,
+    year_price_eur: 432,
     channel: 100,
     posts_per_month: 1000000,
     image_generation_count: 500,

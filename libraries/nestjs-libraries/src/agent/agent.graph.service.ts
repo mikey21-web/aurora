@@ -43,6 +43,8 @@ interface WorkflowChannelsState {
   date?: string;
   format: 'one_short' | 'one_long' | 'thread_short' | 'thread_long';
   tone: 'personal' | 'company';
+  language?: string;
+  brainContext?: string;
   content?: {
     content: string;
     website?: string;
@@ -120,6 +122,8 @@ export class AgentGraphService {
         fresearch: null,
         format: null,
         tone: null,
+        language: null,
+        brainContext: null,
         question: null,
         orgId: null,
         hook: null,
@@ -213,6 +217,14 @@ export class AgentGraphService {
 
   async generateHook(state: WorkflowChannelsState) {
     const structuredOutput = model.withStructuredOutput(hook);
+    const languageInstruction = state.language && state.language !== 'en'
+      ? `- Write in ${state.language} language`
+      : '- Use simple english';
+
+    const brainInstruction = state.brainContext
+      ? `\n        <!-- BEGIN brand voice & context -->\n        ${state.brainContext}\n        <!-- END brand voice & context -->`
+      : '';
+
     const { hook: outputHook } = await ChatPromptTemplate.fromTemplate(
       `
         You are an assistant that gets content for a social media post, and generate only the hook.
@@ -223,22 +235,23 @@ export class AgentGraphService {
         - Use ${state.tone === 'personal' ? '1st' : '3rd'} person mode
         - Make sure it's engaging
         - Don't be cringy
-        - Use simple english
-        - Make sure you add "\n" between the lines
+        ${languageInstruction}
+        - Make sure you add "\\n" between the lines
         - Don't take the hook from "request of the user"
+        ${brainInstruction}
 
         <!-- BEGIN request of the user -->
         {request}
         <!-- END request of the user -->
-        
+
         <!-- BEGIN existing hooks -->
         {hooks}
         <!-- END existing hooks -->
-        
+
         <!-- BEGIN current content -->
         {text}
         <!-- END current content -->
-       
+
       `
     )
       .pipe(structuredOutput)
@@ -257,6 +270,14 @@ export class AgentGraphService {
     const structuredOutput = model.withStructuredOutput(
       contentZod(!!state.isPicture, state.format)
     );
+    const languageInstruction = state.language && state.language !== 'en'
+      ? `- Write the entire post in ${state.language} language`
+      : '- Use simple english';
+
+    const brainInstruction = state.brainContext
+      ? `\n        <!-- BEGIN brand voice & context -->\n        ${state.brainContext}\n        <!-- END brand voice & context -->`
+      : '';
+
     const { content: outputContent } = await ChatPromptTemplate.fromTemplate(
       `
         You are an assistant that gets existing hook of a social media, content and generate only the content.
@@ -276,18 +297,19 @@ export class AgentGraphService {
         - Use the hook as inspiration
         - Make sure it's engaging
         - Don't be cringy
-        - Use simple english
+        ${languageInstruction}
         - The Content should not contain the hook
         - Try to put some call to action at the end of the post
-        - Make sure you add "\n" between the lines
-        - Add "\n" after every "."
-        
+        - Make sure you add "\\n" between the lines
+        - Add "\\n" after every "."
+        ${brainInstruction}
+
         Hook:
         {hook}
-        
+
         User request:
         {request}
-        
+
         current content information:
         {information}
       `
@@ -411,6 +433,8 @@ export class AgentGraphService {
         isPicture: body.isPicture,
         format: body.format,
         tone: body.tone,
+        language: body.language || 'en',
+        brainContext: body.brainContext,
         orgId,
       },
       {

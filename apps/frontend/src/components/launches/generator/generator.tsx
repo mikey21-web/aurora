@@ -21,14 +21,40 @@ import dayjs from 'dayjs';
 import { Select } from '@gitroom/react/form/select';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { AddEditModal } from '@gitroom/frontend/components/new-launch/add.edit.modal';
+import { useContentBrain } from '@gitroom/frontend/components/content-brain/use-content-brain.hook';
 
-const FirstStep: FC = (props) => {
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'hi', label: 'हिंदी (Hindi)' },
+  { code: 'ta', label: 'தமிழ் (Tamil)' },
+  { code: 'te', label: 'తెలుగు (Telugu)' },
+  { code: 'bn', label: 'বাংলা (Bengali)' },
+  { code: 'mr', label: 'मराठी (Marathi)' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'pt', label: 'Português' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'zh', label: '中文' },
+  { code: 'ja', label: '日本語' },
+  { code: 'ko', label: '한국어' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'nl', label: 'Nederlands' },
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'id', label: 'Bahasa Indonesia' },
+  { code: 'vi', label: 'Tiếng Việt' },
+];
+
+const FirstStep: FC = () => {
   const { integrations, reloadCalendarView } = useCalendar();
   const modal = useModals();
   const fetch = useFetch();
   const [loading, setLoading] = useState(false);
   const [showStep, setShowStep] = useState('');
   const t = useT();
+  const { data: brain } = useContentBrain();
+
   const resolver = useMemo(() => {
     return classValidatorResolver(GeneratorDto);
   }, []);
@@ -40,9 +66,11 @@ const FirstStep: FC = (props) => {
       isPicture: false,
       format: 'one_short',
       tone: 'personal',
+      language: 'en',
     },
   });
   const [research] = form.watch(['research']);
+
   const generateStep = useCallback(
     async (reader: ReadableStreamDefaultReader) => {
       const decoder = new TextDecoder('utf-8');
@@ -52,10 +80,7 @@ const FirstStep: FC = (props) => {
         const { done, value } = await reader.read();
         if (done) return lastResponse.data.output;
 
-        // Convert chunked binary data to string
-        const chunkStr = decoder.decode(value, {
-          stream: true,
-        });
+        const chunkStr = decoder.decode(value, { stream: true });
         for (const chunk of chunkStr
           .split('\n')
           .filter((f) => f && f.indexOf('{') > -1)) {
@@ -66,28 +91,16 @@ const FirstStep: FC = (props) => {
                 setShowStep(t('agent_starting', 'Agent starting'));
                 break;
               case 'research':
-                setShowStep(
-                  t('researching_your_content', 'Researching your content...')
-                );
+                setShowStep(t('researching_your_content', 'Researching your content...'));
                 break;
               case 'find-category':
-                setShowStep(
-                  t(
-                    'understanding_the_category',
-                    'Understanding the category...'
-                  )
-                );
+                setShowStep(t('understanding_the_category', 'Understanding the category...'));
                 break;
               case 'find-topic':
                 setShowStep(t('finding_the_topic', 'Finding the topic...'));
                 break;
               case 'find-popular-posts':
-                setShowStep(
-                  t(
-                    'finding_popular_posts_to_match_with',
-                    'Finding popular posts to match with...'
-                  )
-                );
+                setShowStep(t('finding_popular_posts_to_match_with', 'Finding popular posts to match with...'));
                 break;
               case 'generate-hook':
                 setShowStep(t('generating_hook', 'Generating hook...'));
@@ -102,9 +115,7 @@ const FirstStep: FC = (props) => {
                 setShowStep(t('uploading_pictures', 'Uploading pictures...'));
                 break;
               case 'post-time':
-                setShowStep(
-                  t('finding_time_to_post', 'Finding time to post...')
-                );
+                setShowStep(t('finding_time_to_post', 'Finding time to post...'));
                 break;
             }
             lastResponse = data;
@@ -116,14 +127,32 @@ const FirstStep: FC = (props) => {
     },
     [t]
   );
+
   const onSubmit: SubmitHandler<{
     research: string;
+    language?: string;
   }> = useCallback(
     async (value) => {
       setLoading(true);
+
+      const brainContext = brain
+        ? [
+            `Business: ${brain.businessContext}`,
+            `Target Audience: ${brain.targetAudience}`,
+            `Tone & Voice: ${brain.tone}`,
+            `Unique Value: ${brain.uniqueValue}`,
+            brain.extraContext ? `Extra Context: ${brain.extraContext}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n')
+        : undefined;
+
       const response = await fetch('/posts/generator', {
         method: 'POST',
-        body: JSON.stringify(value),
+        body: JSON.stringify({
+          ...value,
+          ...(brainContext ? { brainContext } : {}),
+        }),
       });
       if (!response.body) {
         return;
@@ -134,20 +163,12 @@ const FirstStep: FC = (props) => {
         if (index === 0) {
           return {
             content: load.hook + '\n' + p.content,
-            ...(p?.image?.path
-              ? {
-                  image: [p.image],
-                }
-              : {}),
+            ...(p?.image?.path ? { image: [p.image] } : {}),
           };
         }
         return {
           content: p.content,
-          ...(p?.image?.path
-            ? {
-                image: [p.image],
-              }
-            : {}),
+          ...(p?.image?.path ? { image: [p.image] } : {}),
         };
       });
       setShowStep('');
@@ -164,12 +185,8 @@ const FirstStep: FC = (props) => {
         },
         children: (
           <AddEditModal
-            allIntegrations={integrations.map((p) => ({
-              ...p,
-            }))}
-            integrations={integrations.slice(0).map((p) => ({
-              ...p,
-            }))}
+            allIntegrations={integrations.map((p) => ({ ...p }))}
+            integrations={integrations.slice(0).map((p) => ({ ...p }))}
             mutate={reloadCalendarView}
             date={dayjs.utc(load.date).local()}
             reopenModal={() => ({})}
@@ -180,8 +197,9 @@ const FirstStep: FC = (props) => {
       });
       setLoading(false);
     },
-    [integrations, reloadCalendarView]
+    [integrations, reloadCalendarView, brain]
   );
+
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
@@ -195,13 +213,20 @@ const FirstStep: FC = (props) => {
                 {!showStep ? (
                   <div className="loading-shimmer pb-[10px]">&nbsp;</div>
                 ) : (
-                  <div
-                    className="loading-shimmer pb-[10px]"
-                    data-text={showStep}
-                  >
+                  <div className="loading-shimmer pb-[10px]" data-text={showStep}>
                     {showStep}
                   </div>
                 )}
+
+                {brain && (
+                  <div className="mb-3 px-3 py-2 bg-[#7c3aed]/10 border border-[#7c3aed]/30 rounded-lg flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#7c3aed] shrink-0" />
+                    <span className="text-xs text-newTextColor/70">
+                      Aurora Brain active — posts will match your brand voice
+                    </span>
+                  </div>
+                )}
+
                 <Textarea
                   label={t('write_anything', 'Write anything')}
                   disabled={loading}
@@ -211,46 +236,41 @@ const FirstStep: FC = (props) => {
                   )}
                   {...form.register('research')}
                 />
+
                 <Select
                   label={t('output_format', 'Output format')}
                   {...form.register('format')}
                 >
-                  <option value="one_short">
-                    {t('short_post', 'Short post')}
-                  </option>
-                  <option value="one_long">
-                    {t('long_post', 'Long post')}
-                  </option>
-                  <option value="thread_short">
-                    {t(
-                      'a_thread_with_short_posts',
-                      'A thread with short posts'
-                    )}
-                  </option>
-                  <option value="thread_long">
-                    {t('a_thread_with_long_posts', 'A thread with long posts')}
-                  </option>
+                  <option value="one_short">{t('short_post', 'Short post')}</option>
+                  <option value="one_long">{t('long_post', 'Long post')}</option>
+                  <option value="thread_short">{t('a_thread_with_short_posts', 'A thread with short posts')}</option>
+                  <option value="thread_long">{t('a_thread_with_long_posts', 'A thread with long posts')}</option>
                 </Select>
+
                 <Select
-                  label={t('output_format', 'Output format')}
+                  label={t('voice_tone', 'Voice tone')}
                   {...form.register('tone')}
                 >
                   <option value="personal">
-                    {t(
-                      'personal_voice_i_am_happy_to_announce',
-                      'Personal voice ("I am happy to announce")'
-                    )}
+                    {t('personal_voice_i_am_happy_to_announce', 'Personal voice ("I am happy to announce")')}
                   </option>
                   <option value="company">
-                    {t(
-                      'company_voice_we_are_happy_to_announce',
-                      'Company voice ("We are happy to announce")'
-                    )}
+                    {t('company_voice_we_are_happy_to_announce', 'Company voice ("We are happy to announce")')}
                   </option>
                 </Select>
-                <div
-                  className={clsx('flex items-center', loading && 'opacity-50')}
+
+                <Select
+                  label={t('output_language', 'Output language')}
+                  {...form.register('language')}
                 >
+                  {LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </Select>
+
+                <div className={clsx('flex items-center', loading && 'opacity-50')}>
                   <Checkbox
                     disabled={loading}
                     {...form.register('isPicture')}
@@ -262,11 +282,7 @@ const FirstStep: FC = (props) => {
           </div>
         </div>
         <div className="mt-[20px] flex justify-end">
-          <Button
-            type="submit"
-            disabled={research.length < 10}
-            loading={loading}
-          >
+          <Button type="submit" disabled={research.length < 10} loading={loading}>
             {t('generate', 'Generate')}
           </Button>
         </div>
@@ -274,19 +290,15 @@ const FirstStep: FC = (props) => {
     </form>
   );
 };
-export const GeneratorPopup = () => {
-  const t = useT();
 
-  const modals = useModals();
-  const closeAll = useCallback(() => {
-    modals.closeAll();
-  }, []);
+export const GeneratorPopup = () => {
   return (
     <div className="w-full flex flex-col rounded-[4px] relative">
       <FirstStep />
     </div>
   );
 };
+
 export const GeneratorComponent = () => {
   const t = useT();
   const user = useUser();
@@ -341,7 +353,7 @@ export const GeneratorComponent = () => {
             strokeLinejoin="round"
           />
           <path
-            d="M12.5001 1.66699L13.4823 4.22067C13.7173 4.8317 13.8348 5.13721 14.0175 5.39419C14.1795 5.62195 14.3785 5.82095 14.6062 5.9829C14.8632 6.16563 15.1687 6.28313 15.7797 6.51814L18.3334 7.50033L15.7797 8.48251C15.1687 8.71752 14.8632 8.83502 14.6062 9.01775C14.3785 9.1797 14.1795 9.3787 14.0175 9.60646C13.8348 9.86344 13.7173 10.169 13.4823 10.78L12.5001 13.3337L11.5179 10.78C11.2829 10.169 11.1654 9.86344 10.9827 9.60646C10.8207 9.3787 10.6217 9.1797 10.3939 9.01775C10.137 8.83503 9.83145 8.71752 9.22043 8.48251L6.66675 7.50033L9.22043 6.51814C9.83145 6.28313 10.137 6.16563 10.3939 5.9829C10.6217 5.82095 10.8207 5.62195 10.9827 5.39419C11.1654 5.13721 11.2829 4.8317 11.5179 4.22067L12.5001 1.66699Z"
+            d="M12.5001 1.66699L13.4823 4.22067C13.7173 4.8317 13.8348 5.13721 14.0175 5.39419C14.1795 5.62195 14.3785 5.82095 14.6062 5.9829C14.8632 6.16563 15.1687 6.28313 15.7797 6.51814L18.3334 7.50033L15.7797 8.48251C15.1687 8.71752 14.8632 8.83502 14.6062 9.01775C14.3785 9.1797 14.1795 9.3787 14.3939 9.60646C13.8348 9.86344 13.7173 10.169 13.4823 10.78L12.5001 13.3337L11.5179 10.78C11.2829 10.169 11.1654 9.86344 10.9827 9.60646C10.8207 9.3787 10.6217 9.1797 10.3939 9.01775C10.137 8.83503 9.83145 8.71752 9.22043 8.48251L6.66675 7.50033L9.22043 6.51814C9.83145 6.28313 10.137 6.16563 10.3939 5.9829C10.6217 5.82095 10.8207 5.62195 10.9827 5.39419C11.1654 5.13721 11.2829 4.8317 11.5179 4.22067L12.5001 1.66699Z"
             stroke="white"
             strokeWidth="1.5"
             strokeLinecap="round"
