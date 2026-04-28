@@ -31,6 +31,7 @@ import { Autopost } from '@gitroom/frontend/components/autopost/autopost';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { SVGLine } from '@gitroom/frontend/components/launches/launches.component';
 import { GlobalSettings } from '@gitroom/frontend/components/settings/global.settings';
+import { ContentBrainSettings } from '@gitroom/frontend/components/content-brain/content-brain-settings.component';
 export const SettingsPopup: FC<{
   getRef?: Ref<any>;
 }> = (props) => {
@@ -105,6 +106,8 @@ export const SettingsPopup: FC<{
     if (user?.tier?.public_api && isGeneral && showLogout) {
       arr.push({ tab: 'api', label: t('developers', 'Developers') });
     }
+
+    arr.push({ tab: 'content_brain', label: 'Content Brain' });
 
     return arr;
   }, [user, isGeneral, showLogout, t]);
@@ -201,6 +204,12 @@ export const SettingsPopup: FC<{
                     <PublicComponent />
                   </div>
                 )}
+
+              {tab === 'content_brain' && (
+                <div>
+                  <ContentBrainSettings />
+                </div>
+              )}
 
             </div>
           </form>

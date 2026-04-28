@@ -30,6 +30,7 @@ export const useTrack = () => {
             }),
           })
         ).json();
+        // @ts-ignore
         if (window.fbq) {
           // @ts-ignore
           window.fbq('track', TrackEnum[track], additional, {

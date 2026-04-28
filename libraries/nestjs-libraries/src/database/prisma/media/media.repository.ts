@@ -83,7 +83,7 @@ export class MediaRepository {
           },
         }
       : {};
-    const query = {
+    const query: any = {
       where: {
         organization: {
           id: org,

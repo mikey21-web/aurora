@@ -15,11 +15,13 @@ const localize = false;
 
 const merge = isDev ? devManifest : ({} as ManifestV3Export);
 
+const importMeta = import.meta as any;
+
 export const baseManifest = {
   ...manifest,
   host_permissions: [
-    import.meta.env?.FRONTEND_URL || process?.env?.FRONTEND_URL + '/*',
-    (import.meta.env?.NEXT_PUBLIC_BACKEND_URL || process?.env?.NEXT_PUBLIC_BACKEND_URL || '') + '/*',
+    importMeta?.env?.FRONTEND_URL || process?.env?.FRONTEND_URL + '/*',
+    (importMeta?.env?.NEXT_PUBLIC_BACKEND_URL || process?.env?.NEXT_PUBLIC_BACKEND_URL || '') + '/*',
     ...providers.map(p => p.hostPermission)
   ],
   permissions: [...(manifest.permissions || [])],

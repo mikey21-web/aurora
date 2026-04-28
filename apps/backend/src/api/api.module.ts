@@ -42,6 +42,7 @@ import { GoogleProvider } from '@gitroom/backend/services/auth/providers/google.
 import { FarcasterProvider } from '@gitroom/backend/services/auth/providers/farcaster.provider';
 import { WalletProvider } from '@gitroom/backend/services/auth/providers/wallet.provider';
 import { OauthProvider } from '@gitroom/backend/services/auth/providers/oauth.provider';
+import { ContentBrainController } from '@gitroom/backend/api/routes/content-brain.controller';
 
 const authenticatedController = [
   UsersController,
@@ -61,6 +62,7 @@ const authenticatedController = [
   OAuthAppController,
   OAuthAuthorizedController,
   AnnouncementsController,
+  ContentBrainController,
 ];
 @Module({
   imports: [UploadModule],

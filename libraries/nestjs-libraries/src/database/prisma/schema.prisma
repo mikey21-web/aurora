@@ -43,6 +43,8 @@ model Organization {
   webhooks            Webhooks[]
   oauthApp            OAuthApp[]
   oauthAuthorizations OAuthAuthorization[]
+  contentBrain        ContentBrain?
+  postFeedbacks       PostFeedback[]
 
   @@index([apiKey])
   @@index([streakSince])
@@ -426,6 +428,7 @@ model Post {
   submittedForOrder          Orders?                   @relation(fields: [submittedForOrderId], references: [id])
   submittedForOrganization   Organization?             @relation("submittedForOrg", fields: [submittedForOrganizationId], references: [id])
   tags                       TagsPosts[]
+  feedback                   PostFeedback[]
 
   @@index([group])
   @@index([deletedAt])
@@ -956,4 +959,38 @@ model Announcement {
   description String
   color       AnnouncementColor @default(INFO)
   createdAt   DateTime          @default(now())
+}
+
+model ContentBrain {
+  id              String       @id @default(uuid())
+  organizationId  String       @unique
+  businessContext String
+  targetAudience  String
+  tone            String
+  competitors     String       @default("[]")
+  uniqueValue     String
+  extraContext    String?
+  learnings       String       @default("{}")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  organization    Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+}
+
+model PostFeedback {
+  id             String       @id @default(uuid())
+  organizationId String
+  postId         String?
+  action         String
+  originalContent String
+  editedContent  String?
+  platform       String?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  post           Post?        @relation(fields: [postId], references: [id])
+
+  @@index([organizationId])
+  @@index([action])
+  @@index([createdAt])
 }

@@ -171,6 +171,7 @@ export class AutopostService {
         messages: {
           reducer: (currentState, updateValue) =>
             currentState.concat(updateValue),
+          // @ts-ignore
           default: () => [],
         },
         body: null,

@@ -12,10 +12,10 @@ function toQueryString(obj: Record<string, any>): string {
   return params.toString();
 }
 
-export default class Postiz {
+export default class Aurora {
   constructor(
     private _apiKey: string,
-    private _path = 'https://api.postiz.com'
+    private _path = 'https://api.aurora.com'
   ) {}
 
   async post(posts: CreatePostDto) {
@@ -56,7 +56,7 @@ export default class Postiz {
         ? 'image/jpeg'
         : 'image/jpeg';
 
-    const blob = new Blob([file], { type });
+    const blob = new Blob([file as any], { type });
     formData.append('file', blob, extension);
 
     return (

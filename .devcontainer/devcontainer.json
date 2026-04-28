@@ -1,6 +1,6 @@
 {
-	"name": "Postiz Dev Container",
-	"image": "localhost/postiz-devcontainer",
+	"name": "Aurora Dev Container",
+	"image": "localhost/aurora-devcontainer",
 	"features": {},
 	"customizations": {
 		"vscode": {
