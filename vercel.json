@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": "cd apps/frontend && pnpm build",
+  "outputDirectory": "apps/frontend/.next",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD apps/frontend libraries",
+  "env": {
+    "NEXT_PUBLIC_BACKEND_URL": "https://api.aurora.ai",
+    "NEXT_PUBLIC_FRONTEND_URL": "https://aurora.ai"
+  }
+}
